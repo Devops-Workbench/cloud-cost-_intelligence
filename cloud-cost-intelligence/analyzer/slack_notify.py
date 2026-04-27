@@ -4,19 +4,36 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def send_slack_alert(idle_instances):
+COST_MAP = {
+    'EC2': 50,
+    'RDS': 100,
+    'EBS': 10,
+    'ElasticIP': 3.6
+}
+
+def estimate_savings(resources):
+    total = 0
+    for r in resources:
+        total += COST_MAP.get(r['resource_type'], 10)
+    return round(total, 2)
+
+def send_slack_alert(resources):
     webhook_url = os.getenv('SLACK_WEBHOOK_URL')
 
-    if not idle_instances:
-        message = "✅ *Cloud Cost Intelligence* — No idle instances found. You're clean!"
+    if not resources:
+        message = "✅ *Cloud Cost Intelligence* — No wasteful resources found. You're clean!"
     else:
-        lines = ["🚨 *Cloud Cost Intelligence — Idle Instances Detected!*\n"]
-        for inst in idle_instances:
+        savings = estimate_savings(resources)
+        lines = [f"🚨 *Cloud Cost Intelligence — {len(resources)} Wasteful Resource(s) Detected!*\n"]
+
+        for r in resources:
             lines.append(
-                f"• Instance `{inst['instance_id']}` ({inst['instance_type']}) "
-                f"— Avg CPU: {inst['avg_cpu']}% over 7 days"
+                f"• [{r['resource_type']}] `{r['instance_id']}` ({r['instance_type']}) "
+                f"→ _{r['recommendation']}_"
             )
-        lines.append("\n📋 A Terraform fix PR has been raised automatically.")
+
+        lines.append(f"\n💰 *Estimated Monthly Savings: ${savings}*")
+        lines.append("📋 A Terraform fix PR has been raised automatically.")
         message = "\n".join(lines)
 
     payload = {"text": message}
@@ -27,11 +44,10 @@ def send_slack_alert(idle_instances):
     else:
         print(f"❌ Slack alert failed: {response.status_code}")
 
-
 if __name__ == "__main__":
-    # Test with dummy data
-    test_instances = [
-        {'instance_id': 'i-1234567890abcdef0', 'instance_type': 't2.micro', 'avg_cpu': 1.2},
-        {'instance_id': 'i-abcdef1234567890', 'instance_type': 't3.medium', 'avg_cpu': 3.5}
+    test_resources = [
+        {'resource_type': 'EC2', 'instance_id': 'i-1234567890', 'instance_type': 't2.micro', 'recommendation': 'stop or downsize'},
+        {'resource_type': 'EBS', 'instance_id': 'vol-1234567890', 'instance_type': '50GB gp2', 'recommendation': 'delete orphaned volume'},
+        {'resource_type': 'ElasticIP', 'instance_id': '54.123.45.67', 'instance_type': 'Elastic IP', 'recommendation': 'release unused IP'}
     ]
-    send_slack_alert(test_instances)
+    send_slack_alert(test_resources)

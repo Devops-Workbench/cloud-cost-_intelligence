@@ -2,30 +2,30 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from detector import get_idle_ec2_instances
+from detector import scan_all_resources
 from slack_notify import send_slack_alert
 from pr_generator import raise_github_pr
 
 def main():
-    print("Scanning AWS for idle EC2 instances...")
-    idle_instances = get_idle_ec2_instances()
+    print("🔍 Scanning all AWS resources for waste...")
+    resources = scan_all_resources()
 
-    if not idle_instances:
-        print("No idle instances found.")
+    if not resources:
+        print("✅ No wasteful resources found.")
         send_slack_alert([])
         return
 
-    print(f"Found {len(idle_instances)} idle instance(s):")
-    for inst in idle_instances:
-        print(f"   - {inst['instance_id']} ({inst['instance_type']}) — {inst['avg_cpu']}% avg CPU")
+    print(f"\n⚠️  Found {len(resources)} wasteful resource(s):")
+    for r in resources:
+        print(f"   - [{r['resource_type']}] {r['instance_id']} ({r['instance_type']}) → {r['recommendation']}")
 
-    print("Raising GitHub PR with Terraform fix...")
-    pr_url = raise_github_pr(idle_instances)
+    print("\n📋 Raising GitHub PR with Terraform fix...")
+    pr_url = raise_github_pr(resources)
 
-    print("Sending Slack alert...")
-    send_slack_alert(idle_instances)
+    print("\n📣 Sending Slack alert...")
+    send_slack_alert(resources)
 
-    print(f"Done! PR raised: {pr_url}")
+    print(f"\n✅ Done! PR raised: {pr_url}")
 
 if __name__ == "__main__":
     main()
