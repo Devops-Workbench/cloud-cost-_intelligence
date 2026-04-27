@@ -31,5 +31,5 @@ jobs:
           GITHUB_REPO: ${{ secrets.GH_REPO }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          cd cloud-cost-intelligence/analyzer
+          cd analyzer
           python3 main.py
