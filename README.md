@@ -180,17 +180,9 @@ Every infrastructure change is **reviewed, approved, and tracked in Git** — no
 **The key difference:** Other tools either alert or directly remediate. This project generates a **Terraform PR for human review** — safe, auditable, GitOps-native.
 
 ---
+output 
+<img src="https://github.com/Devops-Workbench/cloud-cost-_intelligence/blob/main/Screenshot%202026-04-27%20170618.png" width="600"/>
 
-## 📊 Resume Impact
-
-```
-Built a GitOps cost intelligence pipeline that scans AWS for idle EC2,
-RDS, EBS, and Elastic IP resources using CloudWatch metrics, auto-generates
-Terraform rightsizing PRs, and reports projected monthly savings via Slack
-— combining detection, remediation, and GitOps review in a single automated workflow.
-```
-
----
 
 ## 🗺️ Roadmap
 
